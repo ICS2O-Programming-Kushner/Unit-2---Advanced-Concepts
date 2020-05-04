@@ -1,0 +1,19 @@
+-----------------------------------------------------------------------------------------
+-- main.lua
+-- Thomas Kushner
+-- ICS2O
+-- This calls the splash screen of the app to load itself.
+-----------------------------------------------------------------------------------------
+
+-- Hide the status bar
+display.setStatusBar(display.HiddenStatusBar)
+
+-----------------------------------------------------------------------------------------
+
+-- Use composer library
+local composer = require( "composer" )
+
+-----------------------------------------------------------------------------------------
+
+-- Go to the intro screen
+composer.gotoScene( "splash_screen" )
