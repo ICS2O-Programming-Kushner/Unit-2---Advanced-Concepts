@@ -2,7 +2,7 @@
 --
 -- credits_screen.lua
 -- Created by: Daniel Lopez-Carreon
--- Date: Nov. 24th, 2014
+-- ICS2O
 -- Description: This is the you win screen
 -----------------------------------------------------------------------------------------
 

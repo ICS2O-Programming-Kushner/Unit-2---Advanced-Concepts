@@ -1,12 +1,4 @@
 -----------------------------------------------------------------------------------------
---
--- level1_screen.lua
--- Created by: Ms Raffin
--- Date: Nov. 22nd, 2014
--- Description: This is the level 1 screen of the game.
------------------------------------------------------------------------------------------
-
------------------------------------------------------------------------------------------
 -- INITIALIZATIONS
 -----------------------------------------------------------------------------------------
 
@@ -26,6 +18,11 @@ sceneName = "level1_screen"
 
 -- Creating Scene Object
 local scene = composer.newScene( sceneName )
+
+-----------------------------------------------------------------------------------------
+-- GLOBAL VARIABLES
+-----------------------------------------------------------------------------------------
+soundOn = true 
 
 -----------------------------------------------------------------------------------------
 -- LOCAL VARIABLES
@@ -54,25 +51,41 @@ local character
 
 local heart1
 local heart2
-local numLives = 2
+local heart3
+local numLives = 3
 
 local rArrow 
 local uArrow
+local lArrow
 
 local motionx = 0
-local SPEED = 5
+local SPEED = 6.5
 local LINEAR_VELOCITY = -100
-local GRAVITY = 7
+local GRAVITY = 6
 
 local leftW 
 local topW
 local floor
+local rightW
 
 local ball1
 local ball2
+local ball3
 local theBall
 
+local muteButton
+local unmuteButton 
+
 local questionsAnswered = 0
+
+-----------------------------------------------------------------------------------------
+-- SOUNDS
+-----------------------------------------------------------------------------------------
+
+local springSound = audio.loadSound("Sounds/dieSound.mp3")
+local springSoundChannel 
+local backgroundMusic = audio.loadStream("Sounds/bkgMusic.mp3")
+local backgroundMusicChannel
 
 -----------------------------------------------------------------------------------------
 -- LOCAL SCENE FUNCTIONS
@@ -91,6 +104,12 @@ local function up (touch)
     end
 end
 
+-- When left arrow is touched, move charecter left 
+local function left (touch)
+    motionx = -SPEED 
+    character.xScale = -1
+end
+
 -- Move character horizontally
 local function movePlayer (event)
     character.x = character.x + motionx
@@ -107,11 +126,13 @@ end
 local function AddArrowEventListeners()
     rArrow:addEventListener("touch", right)
     uArrow:addEventListener("touch", up)
+    lArrow:addEventListener("touch", left)
 end
 
 local function RemoveArrowEventListeners()
     rArrow:removeEventListener("touch", right)
     uArrow:removeEventListener("touch", up)
+    lArrow:removeEventListener("touch", left)
 end
 
 local function AddRuntimeListeners()
@@ -123,6 +144,46 @@ local function RemoveRuntimeListeners()
     Runtime:removeEventListener("enterFrame", movePlayer)
     Runtime:removeEventListener("touch", stop )
 end
+
+local function Mute(touch)
+    if(touch.phase == "ended") then 
+        -- pause the music 
+        audio.pause(backgroundMusicChannel)
+
+        -- turn the sound variable off 
+        soundOn = false 
+
+        -- make the unmute button invisible and the mute button visible 
+        muteButton.isVisible = true
+        unmuteButton.isVisible = false
+    end
+end
+
+local function UnMute(touch)
+    if(touch.phase == "ended") then 
+        -- pause the music 
+        audio.resume(backgroundMusicChannel)
+
+        -- turn the sound variable off 
+        soundOn = true 
+
+        -- make the unmute button invisible and the mute button visible 
+        muteButton.isVisible = false
+        unmuteButton.isVisible = true
+    end
+end
+
+local function AddMuteUnMuteListeners()
+    unmuteButton:addEventListener("touch", Mute)
+    muteButton:addEventListener("touch", UnMute)
+
+end
+
+local function RemoveMuteUnMuteListeners()
+    unmuteButton:removeEventListener("touch", Mute)
+    muteButton:addEventListener("touch", UnMute)
+end
+
 
 
 local function ReplaceCharacter()
@@ -152,15 +213,21 @@ end
 local function MakeSoccerBallsVisible()
     ball1.isVisible = true
     ball2.isVisible = true
+    ball3.isVisible = true 
 end
 
 local function MakeHeartsVisible()
     heart1.isVisible = true
     heart2.isVisible = true
+    heart3.isVisible = true
 end
 
 local function YouLoseTransition()
     composer.gotoScene( "you_lose" )
+end
+
+local function YouWinTransition()
+    composer.gotoScene( "you_win" )
 end
 
 local function onCollision( self, event )
@@ -180,7 +247,11 @@ local function onCollision( self, event )
             (event.target.myName == "spikes2") or
             (event.target.myName == "spikes3") then
 
-            -- add sound effect here
+                if (soundOn == true) then 
+
+                    -- play sound effect 
+                    springSoundChannel = audio.play( springSound, {channel = 2, loops = 1} )
+                end
 
             -- remove runtime listeners that move the character
             RemoveArrowEventListeners()
@@ -192,21 +263,31 @@ local function onCollision( self, event )
             -- decrease number of lives
             numLives = numLives - 1
 
-            if (numLives == 1) then
+            if (numLives == 2) then
                 -- update hearts
-                heart1.isVisible = true
-                heart2.isVisible = false
+                heart1.isVisible = false
+                heart2.isVisible = true
+                heart3.isVisible = true
                 timer.performWithDelay(200, ReplaceCharacter) 
+
+            elseif (numLives == 1) then
+                -- update hearts
+                heart1.isVisible = false
+                heart2.isVisible = false
+                heart3.isVisible = true
+                timer.performWithDelay(200, ReplaceCharacter)
 
             elseif (numLives == 0) then
                 -- update hearts
                 heart1.isVisible = false
                 heart2.isVisible = false
+                heart3.isVisible = false
                 timer.performWithDelay(200, YouLoseTransition)
             end
         end
 
         if  (event.target.myName == "ball1") or
+            (event.target.myName == "ball3") or
             (event.target.myName == "ball2") then
 
             -- get the ball that the user hit
@@ -226,9 +307,11 @@ local function onCollision( self, event )
         end
 
         if (event.target.myName == "door") then
-            --check to see if the user has answered 5 questions
+            --check to see if the user has answered 3 questions
             if (questionsAnswered == 3) then
                 -- after getting 3 questions right, go to the you win screen
+
+            timer.performWithDelay(200, YouWinTransition)
             end
         end        
 
@@ -250,6 +333,8 @@ local function AddCollisionListeners()
     ball1:addEventListener( "collision" )
     ball2.collision = onCollision
     ball2:addEventListener( "collision" )
+    ball3.collision = onCollision
+    ball3:addEventListener( "collision" )
 
     door.collision = onCollision
     door:addEventListener( "collision" )
@@ -262,6 +347,7 @@ local function RemoveCollisionListeners()
 
     ball1:removeEventListener( "collision" )
     ball2:removeEventListener( "collision" )
+    ball3:removeEventListener( "collision" )
 
     door:removeEventListener( "collision")
 
@@ -285,9 +371,11 @@ local function AddPhysicsBodies()
     physics.addBody(leftW, "static", {density=1, friction=0.3, bounce=0.2} )
     physics.addBody(topW, "static", {density=1, friction=0.3, bounce=0.2} )
     physics.addBody(floor, "static", {density=1, friction=0.3, bounce=0.2} )
+    physics.addBody(rightW, "static", {density=1, friction=0.3, bounce=0.2} )
 
     physics.addBody(ball1, "static",  {density=0, friction=0, bounce=0} )
     physics.addBody(ball2, "static",  {density=0, friction=0, bounce=0} )
+    physics.addBody(ball3, "static",  {density=0, friction=0, bounce=0} )
 
     physics.addBody(door, "static", {density=1, friction=0.3, bounce=0.2})
 
@@ -310,6 +398,9 @@ local function RemovePhysicsBodies()
     physics.removeBody(leftW)
     physics.removeBody(topW)
     physics.removeBody(floor)
+    physics.removeBody(rightW)
+
+    physics.removeBody(door)
  
 end
 
@@ -431,7 +522,7 @@ function scene:create( event )
     sceneGroup:insert( door )
 
     -- Insert the Hearts
-    heart1 = display.newImageRect("Images/heart.png", 80, 80)
+    heart1 = display.newImageRect("Images/heart.png", 50, 50)
     heart1.x = 50
     heart1.y = 50
     heart1.isVisible = true
@@ -439,13 +530,22 @@ function scene:create( event )
     -- Insert objects into the scene group in order to ONLY be associated with this scene
     sceneGroup:insert( heart1 )
 
-    heart2 = display.newImageRect("Images/heart.png", 80, 80)
-    heart2.x = 130
+    heart2 = display.newImageRect("Images/heart.png", 50, 50)
+    heart2.x = 110
     heart2.y = 50
     heart2.isVisible = true
 
     -- Insert objects into the scene group in order to ONLY be associated with this scene
     sceneGroup:insert( heart2 )
+
+    heart3 = display.newImageRect("Images/heart.png", 50, 50)
+    heart3.x = 170
+    heart3.y = 50
+    heart3.isVisible = true
+
+    -- Insert objects into the scene group in order to ONLY be associated with this scene
+    sceneGroup:insert( heart3 )
+
 
     --Insert the right arrow
     rArrow = display.newImageRect("Images/RightArrowUnpressed.png", 100, 50)
@@ -455,13 +555,21 @@ function scene:create( event )
     -- Insert objects into the scene group in order to ONLY be associated with this scene
     sceneGroup:insert( rArrow)
 
-    --Insert the left arrow
+    --Insert the up arrow
     uArrow = display.newImageRect("Images/UpArrowUnpressed.png", 50, 100)
     uArrow.x = display.contentWidth * 8.2 / 10
     uArrow.y = display.contentHeight * 8.5 / 10
 
     -- Insert objects into the scene group in order to ONLY be associated with this scene
     sceneGroup:insert( uArrow)
+
+    --Insert the left arrow
+    lArrow = display.newImageRect("Images/LeftArrowUnpressed.png", 100, 50)
+    lArrow.x = display.contentWidth * 7.2 / 10
+    lArrow.y = display.contentHeight * 9.5 / 10
+
+    -- Insert objects into the scene group in order to ONLY be associated with this scene
+    sceneGroup:insert( lArrow)
 
     --WALLS--
     leftW = display.newLine( 0, 0, 0, display.contentHeight)
@@ -508,6 +616,33 @@ function scene:create( event )
     -- Insert objects into the scene group in order to ONLY be associated with this scene
     sceneGroup:insert( ball2 )
 
+    --ball3
+    ball3 = display.newImageRect ("Images/SoccerBall.png", 70, 70)
+    ball3.x = 955
+    ball3.y = 140
+    ball3.myName = "ball3"
+
+    -- Insert objects into the scene group in order to ONLY be associated with this scene
+    sceneGroup:insert( ball3 )
+
+    -- mute button 
+    muteButton = display.newImageRect ("Images/mute.png", 70, 70)
+    muteButton.x = 50 
+    muteButton.y = 730
+    muteButton.isVisible = false
+
+    -- Insert objects into the scene group in order to ONLY be associated with this scene
+    sceneGroup:insert( muteButton )
+
+    -- unmute Button 
+    unmuteButton = display.newImageRect ("Images/unmuteButton.png", 70, 70)
+    unmuteButton.x = 50 
+    unmuteButton.y = 730
+    unmuteButton.isVisible = true
+
+    -- Insert objects into the scene group in order to ONLY be associated with this scene
+    sceneGroup:insert( unmuteButton )
+
 end --function scene:create( event )
 
 -----------------------------------------------------------------------------------------
@@ -537,8 +672,18 @@ function scene:show( event )
         -- Insert code here to make the scene come alive.
         -- Example: start timers, begin animation, play audio, etc.
 
-        numLives = 2
+        numLives = 3
         questionsAnswered = 0
+
+        if (soundOn == true) then 
+            -- play backgroundMusic 
+            backgroundMusicChannel = audio.play( backgroundMusic, {channel = 1, loops = -1})
+            
+            muteButton.isVisible = false
+            unmuteButton.isVisible = true 
+        else
+
+        end
 
         -- make all soccer balls visible
         MakeSoccerBallsVisible()
@@ -554,6 +699,9 @@ function scene:show( event )
 
         -- create the character, add physics bodies and runtime listeners
         ReplaceCharacter()
+
+        -- add the mute an unmute functionality to the buttons 
+        AddMuteUnMuteListeners()
 
     end
 
@@ -578,6 +726,9 @@ function scene:hide( event )
     -----------------------------------------------------------------------------------------
 
     elseif ( phase == "did" ) then
+        -- stop the background music 
+        audio.stop(backgroundMusicChannel)
+
         -- Called immediately after scene goes off screen.
         RemoveCollisionListeners()
         RemovePhysicsBodies()
@@ -585,6 +736,7 @@ function scene:hide( event )
         physics.stop()
         RemoveArrowEventListeners()
         RemoveRuntimeListeners()
+        RemoveMuteUnMuteListeners()
         display.remove(character)
     end
 
