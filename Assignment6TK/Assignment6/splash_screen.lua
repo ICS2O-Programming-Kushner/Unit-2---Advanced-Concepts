@@ -1,4 +1,4 @@
--- splash_screen.lua
+-- Assignment 6
 -- Created by: Thomas Kushner
 -- ICS2O
 -- Description: This is the splash screen of the game. It displays the 
@@ -21,25 +21,42 @@ local scene = composer.newScene( sceneName )
 -----------------------------------------------------------------------------------------
  
 -- The local variables for this scene
-local beetleship
+local logo
+local jet
+local panzer
 local scrollXSpeed = 8
 local scrollYSpeed = -3
-local jungleSounds = audio.loadSound("Sounds/animals144.mp3")
-local jungleSoundsChannel
+local trumpetSound = audio.loadSound("Sounds/horn.mp3")
+local trumpetSoundsChannel
 
 --------------------------------------------------------------------------------------------
 -- LOCAL FUNCTIONS
 --------------------------------------------------------------------------------------------
 
 -- The function that moves the beetleship across the screen
-local function moveBeetleship()
-    beetleship.x = beetleship.x + scrollXSpeed
-    beetleship.y = beetleship.y + scrollYSpeed
+local function moveJet( event )
+    jet.x = jet.x + scrollXSpeed
+    jet.y = jet.y + scrollYSpeed
 end
 
+-- The function that changes the transparency of the panzer
+local function fadePanzer( event )
+    panzer.alpha = panzer.alpha - 0.01
+end
+
+-- This funtion moves the panzer
+local function movePanzer ( event )
+    panzer.x = panzer.x + scrollXSpeed
+    panzer.y = panzer.y + scrollYSpeed
+end
+   
+-- This function fades out the logo
+local function FadeLogo( event )
+    logo.alpha = logo.alpha - 0.001
+end
 -- The function that will go to the main menu 
-local function gotoMainMenu()
-    composer.gotoScene( "main_menu" {effect = "fromRight", time = 1000} )
+local function gotoMainMenu( event )
+    
 end
 
 -----------------------------------------------------------------------------------------
@@ -52,20 +69,26 @@ function scene:create( event )
     -- Creating a group that associates objects with the scene
     local sceneGroup = self.view
 
-    -- set the background to be black
-    display.setDefault("background", 0, 0, 0)
+    display.newImageRect("Images/logo.png", 1000, 500)
+    display.newImageRect("Images/jet.png", 200, 100)
+    display.newImageRect("Images/panzer.png", 300, 200)
 
-    -- Insert the beetleship image
-    beetleship = display.newImageRect("Images/beetleship.png", 200, 200)
+    -- set the initial x and y position of the objects
+    logo.x = 500
+    logo.y = contentHeight/2
 
-    -- set the initial x and y position of the beetleship
-    beetleship.x = 100
-    beetleship.y = display.contentHeight/2
+    jet.x = 200
+    jet.y = contentHeight/5
+
+    panzer.x = 200
+    panzer.y = contentHeight/7
 
     -- Insert objects into the scene group in order to ONLY be associated with this scene
-    sceneGroup:insert( beetleship )
+    sceneGroup:insert( logo )
+    sceneGroup:insert( jet )
+    sceneGroup:insert( panzer )
 
-end -- function scene:create( event )
+end 
 
 --------------------------------------------------------------------------------------------
 
@@ -88,22 +111,20 @@ function scene:show( event )
 
     elseif ( phase == "did" ) then
         -- start the splash screen music
-        jungleSoundsChannel = audio.play(jungleSounds )
+        trumpetSoundsChannel = audio.play(trumpetSound )
 
-        -- Call the moveBeetleship function as soon as we enter the frame.
-        Runtime:addEventListener("enterFrame", moveBeetleship)
+    
 
         -- Go to the main menu screen after the given time.
         timer.performWithDelay ( 3000, gotoMainMenu)          
         
     end
 
-end --function scene:show( event )
-
+end 
 -----------------------------------------------------------------------------------------
 
 -- The function called when the scene is issued to leave the screen
-function scene:hide( event )
+local function scene hide( event )
 
     -- Creating a group that associates objects with the scene
     local sceneGroup = self.view
@@ -111,21 +132,13 @@ function scene:hide( event )
 
     -----------------------------------------------------------------------------------------
 
-    -- Called when the scene is on screen (but is about to go off screen).
-    -- Insert code here to "pause" the scene.
-    -- Example: stop timers, stop animation, stop audio, etc.
-    if ( phase == "will" ) then  
-
-    -----------------------------------------------------------------------------------------
-
     -- Called immediately after scene goes off screen.
-    elseif ( phase == "did" ) then
+    elseif( phase == "did" ) then
         
         -- stop the jungle sounds channel for this screen
-        audio.stop(jungleSoundsChannel)
+        audio.stop(trumpetSoundsChannel)
     end
 
-end --function scene:hide( event )
 
 -----------------------------------------------------------------------------------------
 
@@ -135,23 +148,16 @@ function scene:destroy( event )
     -- Creating a group that associates objects with the scene
     local sceneGroup = self.view
 
-    -----------------------------------------------------------------------------------------
-
-
-    -- Called prior to the removal of scene's view ("sceneGroup").
-    -- Insert code here to clean up the scene.
-    -- Example: remove display objects, save state, etc.
-end -- function scene:destroy( event )
-
+    
 -----------------------------------------------------------------------------------------
 -- EVENT LISTENERS
 -----------------------------------------------------------------------------------------
 
 -- Adding Event Listeners
-scene:addEventListener( "create", scene )
-scene:addEventListener( "show", scene )
-scene:addEventListener( "hide", scene )
-scene:addEventListener( "destroy", scene )
+scene:addEventListener( "create", moveJet )
+scene:addEventListener( "show", fadePanzer )
+scene:addEventListener( "hide", movePanzer )
+scene:addEventListener( "destroy", FadeLogo )
 
 -----------------------------------------------------------------------------------------
 
