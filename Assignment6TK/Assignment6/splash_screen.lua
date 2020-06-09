@@ -134,8 +134,7 @@ function scene:show( event )
 
         logo:applyForce( 0, 1000, logo.x, logo.y )
 
-        --make the bottom static so that it won't move
-        physics.addBody(bottom, "static")
+       
 
         -- Call the GameStart function as soon as we enter the frame.
         SplashStart( )
@@ -162,8 +161,7 @@ function scene:hide( event )
         --Make the logo dynamic so that it will move
         physics.removeBody(logo)
 
-        --make the bottom static so that it won't move
-        physics.removeBody(bottom)
+    
         
     elseif ( phase == "did") then
 
