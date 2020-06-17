@@ -7,14 +7,6 @@
 -- hide the status bar
 display.setStatusBar(display.HiddenStatusBar)
 
--- create background 
-local backgroundImage = display.newImageRect("Images/bkg.png", 2048, 1536)
-
--- Create the objects in the splash screen
-local jet = display.newImageRect("Images/jet.png", 200, 200)
-local panzer = display.newImageRect("Images/panzer.png", 400, 400)
-local logo = display.newImageRect("Images/tLogo.png", 1050, 836)
-
 ---------------------------------------------------------------------
 -- SOUNDS
 ---------------------------------------------------------------------
@@ -22,24 +14,12 @@ local trumpet = audio.loadSound("Sounds/horn.mp3")
 local hornSoundChannel
 
 ---------------------------------------------------------------------
-
-
--- set the intial (x,y) position of jet
-jet.x = 100
-jet.y = display.contentHeight/7
-
-
--- set the initial (x,y) position of panzer
-panzer.x = 350
-panzer.y = display.contentHeight/1.7
-
--- set the initial (x,y) position of logo
-logo.x = 500
-logo.y = display.contentHeight/2
-logo.isVisible = false
-
-
--- global variables
+-- VARIABLES
+---------------------------------------------------------------------
+local backgroundImage
+local jet
+local panzer
+local logo
 scrollSpeed = 10
 
 --------------------------------------------------------------------
@@ -154,8 +134,7 @@ function scene:show( event )
 
         logo:applyForce( 0, 1000, logo.x, logo.y )
 
-        --make the bottom static so that it won't move
-        physics.addBody(bottom, "static")
+       
 
         -- Call the GameStart function as soon as we enter the frame.
         SplashStart( )
@@ -182,8 +161,7 @@ function scene:hide( event )
         --Make the logo dynamic so that it will move
         physics.removeBody(logo)
 
-        --make the bottom static so that it won't move
-        physics.removeBody(bottom)
+    
         
     elseif ( phase == "did") then
 
